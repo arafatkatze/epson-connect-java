@@ -77,7 +77,7 @@ public class AuthCtx {
         }
     }
 
-    private void deauthenticate() {
+    public void deauthenticate() {
         String method = "DELETE";
         String path = "/api/1/printing/printers/" + subjectId;
         httpClient.send(method, path, null, null);
