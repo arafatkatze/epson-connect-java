@@ -1,22 +1,34 @@
 package com.epsonconnectjava.http;
 
-import java.net.URL;
-import java.net.HttpURLConnection;
-import java.util.Map;
-import java.util.HashMap;
-import java.io.OutputStream;
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
+import okhttp3.*;
 import org.json.JSONObject;
-import java.util.logging.Logger;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.io.IOException;
 public class RealHttpClient implements HttpClient {
 
-    private final String baseUrl;
-    private final Logger logger = Logger.getLogger(RealHttpClient.class.getName());
+    private String baseUrl;
+    private String printerEmail;
+    private String clientId;
+    private String clientSecret;
+
+    private LocalDateTime expiresAt;
+    private String accessToken = "";
+    private String refreshToken = "";
+    private String subjectId = "";
+
+    private OkHttpClient client;
 
     public RealHttpClient(String baseUrl) {
         this.baseUrl = baseUrl;
+        this.clientId = "a243e42e187e469f8e9c6e2383b7e2e6";
+        this.clientSecret = "PDLDVwcHI7eX4oL2jHGEdIgl0EK9iMdjNkXumi2tZIgaeyG5AKtGqgHQCEyNZGsR";
+
+        this.expiresAt = LocalDateTime.now();
+        this.client = new OkHttpClient();
+        this.printerEmail = "pdx3882hvp0q97@print.epsonconnect.com";
     }
 
     @Override
@@ -24,47 +36,45 @@ public class RealHttpClient implements HttpClient {
         if (headers == null) {
             headers = getDefaultHeaders();
         }
+        JSONObject responseBody = null;
+        RequestBody formBody;
+        formBody = new FormBody.Builder()
+                .add("grant_type", "password")
+                .add("username", this.printerEmail)
+                .add("password", "")
+                .build();
+        String credentials = Credentials.basic(this.clientId, this.clientSecret);
+        Request request = new Request.Builder()
+                .url(baseUrl + path)
+                .post(formBody)
+                .header("Authorization", credentials)
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .build();
 
-        logger.info(String.format("%s %s data=%s headers=%s", method, path, data, headers));
-
-        try {
-            URL url = new URL(baseUrl + path);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod(method);
-
-            for (Map.Entry<String, String> header : headers.entrySet()) {
-                connection.setRequestProperty(header.getKey(), header.getValue());
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Unexpected code " + response);
             }
 
-            if (data != null) {
-                connection.setDoOutput(true);
-                OutputStream os = connection.getOutputStream();
-                os.write(data.toString().getBytes());
-                os.flush();
-                os.close();
+             responseBody = new JSONObject(response.body().string());
+            if (responseBody.has("error")) {
+                throw new Exception(responseBody.getString("error"));
             }
 
-            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            StringBuilder response = new StringBuilder();
-            String line;
-
-            while ((line = in.readLine()) != null) {
-                response.append(line);
-            }
-            in.close();
-
-            JSONObject jsonResponse = new JSONObject(response.toString());
-
-            String error = jsonResponse.optString("code");
-            if (!error.isEmpty()) {
-                throw new ApiError(error);
+            if (accessToken.isEmpty()) {
+                refreshToken = responseBody.getString("refresh_token");
             }
 
-            return jsonResponse;
+            expiresAt = LocalDateTime.now().plusSeconds(responseBody.getLong("expires_in"));
+            accessToken = responseBody.getString("access_token");
+            subjectId = responseBody.getString("subject_id");
+
         } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+            e.printStackTrace();
         }
+        return responseBody;
     }
+
 
     private Map<String, String> getDefaultHeaders() {
         Map<String, String> headers = new HashMap<>();

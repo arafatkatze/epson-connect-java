@@ -6,6 +6,11 @@ import java.util.logging.Logger;
 import java.util.Date;
 import org.json.JSONObject;
 import com.epsonconnectjava.http.HttpClient;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import org.json.JSONObject;
+import java.util.Scanner;
 
 public class AuthCtx {
     private static final Logger logger = Logger.getLogger(AuthCtx.class.getName());
@@ -31,8 +36,55 @@ public class AuthCtx {
         this.refreshToken = "";
         this.subjectId = "";
         this.httpClient = httpClient;
+    }
 
-        // auth();
+    public JSONObject send(String method, String path, Map<String, String> data, Map<String, String> headers) {
+        HttpURLConnection conn = null;
+        try {
+            URL url = new URL(baseUrl + path);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod(method);
+    
+            if (headers != null) {
+                for (Map.Entry<String, String> header : headers.entrySet()) {
+                    conn.setRequestProperty(header.getKey(), header.getValue());
+                }
+            }
+    
+            if (data != null) {
+                conn.setDoOutput(true);
+                try (OutputStream os = conn.getOutputStream()) {
+                    byte[] input = mapToFormData(data).getBytes("utf-8");
+                    os.write(input, 0, input.length);
+                }
+            }
+    
+            int responseCode = conn.getResponseCode();
+            if (responseCode != HttpURLConnection.HTTP_OK) {
+                throw new ApiError("HTTP error code: " + responseCode);
+            }
+    
+            String responseBody = new Scanner(conn.getInputStream(), "UTF-8").useDelimiter("\\A").next();
+            return new JSONObject(responseBody);
+    
+        } catch (Exception e) {
+            throw new ApiError("Error sending request: " + e.getMessage());
+        } finally {
+            if (conn != null) {
+                conn.disconnect();
+            }
+        }
+    }
+
+    private String mapToFormData(Map<String, String> data) {
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, String> entry : data.entrySet()) {
+            if (sb.length() > 0) {
+                sb.append('&');
+            }
+            sb.append(entry.getKey()).append('=').append(entry.getValue());
+        }
+        return sb.toString();
     }
 
     public void auth() {
@@ -57,6 +109,7 @@ public class AuthCtx {
         }
 
         try {
+
             JSONObject body = httpClient.send(method, path, data, headers);
             
             String error = body.optString("error");
