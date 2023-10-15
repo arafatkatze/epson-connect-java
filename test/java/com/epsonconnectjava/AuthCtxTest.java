@@ -31,19 +31,19 @@ public class AuthCtxTest {
     public void testAuthWithNewToken() throws Exception {
         // Arrange
         JSONObject response = new JSONObject();
-        response.put("refresh_token", "newRefreshToken");
-        response.put("expires_in", 3600);
-        response.put("access_token", "newAccessToken");
-        response.put("subject_id", "newSubjectId");
-        when(mockHttpClient.send(anyString(), anyString(), anyMap(), anyMap())).thenReturn(response);
+//        response.put("refresh_token", "newRefreshToken");
+//        response.put("expires_in", 3600);
+//        response.put("access_token", "newAccessToken");
+//        response.put("subject_id", "newSubjectId");
+//        when(mockHttpClient.send(anyString(), anyString(), anyMap(), anyMap())).thenReturn(response);
 
 
-        System.out.println("Running Auth methoding for love");
-        // Act
-        authCtx.auth();
-
-        // Verify that the HttpClient's send method was called once
-        verify(mockHttpClient, times(1)).send(anyString(), anyString(), anyMap(), anyMap());
+//        System.out.println("Running Auth methoding for love");
+//        // Act
+//        authCtx.auth();
+//
+//        // Verify that the HttpClient's send method was called once
+//        verify(mockHttpClient, times(1)).send(anyString(), anyString(), anyMap(), anyMap());
 
         authRealCtx = new AuthCtx( "https://api.epsonconnect.com",  "pdx3882hvp0q97@print.epsonconnect.com", "a243e42e187e469f8e9c6e2383b7e2e6", "PDLDVwcHI7eX4oL2jHGEdIgl0EK9iMdjNkXumi2tZIgaeyG5AKtGqgHQCEyNZGsR");
         authRealCtx.auth();

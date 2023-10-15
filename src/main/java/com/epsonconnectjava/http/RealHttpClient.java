@@ -32,35 +32,9 @@ public class RealHttpClient implements HttpClient {
     }
 
     @Override
-    public JSONObject send(String method, String path, Map<String, String> data, Map<String, String> headers) {
-        if (headers == null) {
-            headers = getDefaultHeaders();
-        }
+    public JSONObject send(Request.Builder requestBuilder) {
         JSONObject responseBody = null;
-
-        Request.Builder requestBuilder = new Request.Builder()
-                .url(baseUrl + path);
-
-        if ("POST".equalsIgnoreCase(method)) {
-            RequestBody formBody = new FormBody.Builder()
-                    .add("grant_type", "password")
-                    .add("username", this.printerEmail)
-                    .add("password", "")
-                    .build();
-            String credentials = Credentials.basic(this.clientId, this.clientSecret);
-            requestBuilder.header("Content-Type", "application/x-www-form-urlencoded");
-            requestBuilder.header("Authorization", credentials);
-            requestBuilder.post(formBody);
-        } else if ("GET".equalsIgnoreCase(method)) {
-            requestBuilder.header("Content-Type", "application/json");
-            requestBuilder.header("Authorization", "Bearer " + headers.get("access_token"));
-            requestBuilder.get();
-        } else {
-            throw new IllegalArgumentException("Unsupported HTTP method: " + method);
-        }
-
         Request request = requestBuilder.build();
-
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 throw new IOException("Unexpected code " + response);
@@ -71,13 +45,6 @@ public class RealHttpClient implements HttpClient {
                 throw new Exception(responseBody.getString("error"));
             }
 
-            if (accessToken.isEmpty()) {
-                refreshToken = responseBody.getString("refresh_token");
-            }
-
-            expiresAt = LocalDateTime.now().plusSeconds(responseBody.getLong("expires_in"));
-            accessToken = responseBody.getString("access_token");
-            subjectId = responseBody.getString("subject_id");
 
         } catch (Exception e) {
             e.printStackTrace();

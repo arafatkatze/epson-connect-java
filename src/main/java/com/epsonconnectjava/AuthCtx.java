@@ -22,12 +22,12 @@ import com.epsonconnectjava.http.RealHttpClient;
 public class AuthCtx {
     private static final Logger logger = Logger.getLogger(AuthCtx.class.getName());
     
-    private String baseUrl;
+    public String baseUrl;
     private String printerEmail;
     private String clientId;
     private String clientSecret;
     private Date expiresAt;
-    private String accessToken;
+    public String accessToken;
     private String refreshToken;
     private String subjectId;
     private final HttpClient httpClient;
@@ -49,14 +49,14 @@ public class AuthCtx {
         this.httpClient = httpClient;
     }
 
-    public JSONObject send(String method, String path, Map<String, String> data, Map<String, String> headers) {
-        return this.httpClient.send(method,path,data,headers);
+    public JSONObject send(Request.Builder requestBuilder) {
+        return this.httpClient.send(requestBuilder);
     }
 
-    public JSONObject sendGet(String method, String path, Map<String, String> data, Map<String, String> headers) {
-        headers.put("access_token", this.accessToken);
-        return this.httpClient.send(method,path,data,headers);
-    }
+//    public JSONObject sendGet(String method, String path, Map<String, String> data, Map<String, String> headers) {
+//        headers.put("access_token", this.accessToken);
+//        return this.httpClient.send(method,path,data,headers);
+//    }
 
     private String mapToFormData(Map<String, String> data) {
         StringBuilder sb = new StringBuilder();
@@ -91,9 +91,21 @@ public class AuthCtx {
         }
 
         try {
+            JSONObject responseBody = null;
 
-            JSONObject body = httpClient.send(method, path, data, headers);
-            
+            Request.Builder requestBuilder = new Request.Builder()
+                    .url(baseUrl + path);
+
+            RequestBody formBody = new FormBody.Builder()
+                    .add("grant_type", "password")
+                    .add("username", this.printerEmail)
+                    .add("password", "")
+                    .build();
+            String credentials = Credentials.basic(this.clientId, this.clientSecret);
+            requestBuilder.header("Content-Type", "application/x-www-form-urlencoded");
+            requestBuilder.header("Authorization", credentials);
+            requestBuilder.post(formBody);
+            JSONObject body = httpClient.send(requestBuilder);
             String error = body.optString("error");
             if (!error.isEmpty()) {
                 throw new AuthenticationError(error);
@@ -115,7 +127,7 @@ public class AuthCtx {
     public void deauthenticate() {
         String method = "DELETE";
         String path = "/api/1/printing/printers/" + subjectId;
-        httpClient.send(method, path, null, null);
+//        httpClient.send(method, path, null, null);
     }
 
     public String getDeviceId() {

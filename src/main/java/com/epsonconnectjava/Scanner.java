@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import okhttp3.*;
 import org.json.JSONObject;
 
 // Assuming the AuthCtx class is present in the same package
@@ -34,9 +35,14 @@ public class Scanner {
       String method = "GET";
       Map<String, String> headers = new HashMap<>();
       headers.put("Content-Type", "application/json");
-      
-      // The third parameter (data) is set to null as we are not sending any data in a GET request
-      JSONObject response = this.authCtx.sendGet(method, path, null, headers);
+
+
+        Request.Builder requestBuilder = new Request.Builder()
+                .url(this.authCtx.baseUrl + path);
+            requestBuilder.header("Content-Type", "application/json");
+            requestBuilder.header("Authorization", "Bearer " + this.authCtx.accessToken);
+            requestBuilder.get();
+        JSONObject response = this.authCtx.send(requestBuilder);
       return jsonObjectToMap(response);
   }
   
@@ -53,51 +59,43 @@ public class Scanner {
     return map;
 }
 
-    // public Map<String, String> add(String name, String destination, String type) {
-    //     String method = "POST";
+    public Map<String, String> add() {
+        String method = "GET";
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "application/json");
 
-    //     validateDestination(name, destination, type);
+        // Construct the data as a JSON string
+        JSONObject data = new JSONObject();
+        data.put("alias_name", "carsd");
+        data.put("type", "mail");
+        data.put("destination", "weqw@gmail.com");
 
-    //     Map<String, String> data = new HashMap<>();
-    //     data.put("alias_name", name);
-    //     data.put("type", type);
-    //     data.put("destination", destination);
+        Request.Builder requestBuilder = new Request.Builder()
+                .url(this.authCtx.baseUrl + path);
+        requestBuilder.header("Content-Type", "application/json");
+        requestBuilder.header("Authorization", "Bearer " + this.authCtx.accessToken);
+        requestBuilder.post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), data.toString()));
+        JSONObject response = this.authCtx.send(requestBuilder);
+        return jsonObjectToMap(response);
+    }
 
-    //     Map<String, String> resp = authCtx.send(method, path, data);
-    //     destinationCache.put(resp.get("id"), resp);
-    //     return resp;
-    // }
+    public Map<String, String> delete() {
+        String method = "DELETE";
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "application/json");
 
-    // public Map<String, String> update(String id, String name, String destination, String type) {
-    //     String method = "POST";
+        // Construct the data as a JSON string
+        JSONObject data = new JSONObject();
+        data.put("id", "23a97920a07a40eb9f7e093b6398aec4");
 
-    //     Map<String, String> destCache = destinationCache.get(id);
-    //     if (destCache == null) {
-    //         throw new ScannerError("Scan destination is not yet registered.");
-    //     }
-
-    //     validateDestination(name, destination, type);
-
-    //     Map<String, String> data = new HashMap<>();
-    //     data.put("id", id);
-    //     data.put("alias_name", name != null ? name : destCache.get("alias_name"));
-    //     data.put("type", type != null ? type : destCache.get("type"));
-    //     data.put("destination", destination != null ? destination : destCache.get("destination"));
-
-    //     Map<String, String> resp = authCtx.send(method, path, data);
-    //     destinationCache.put(id, resp);
-    //     return resp;
-    // }
-
-    // public void remove(String id) {
-    //     String method = "DELETE";
-
-    //     Map<String, String> data = new HashMap<>();
-    //     data.put("id", id);
-
-    //     authCtx.send(method, path, data);
-    //     destinationCache.remove(id);
-    // }
+        Request.Builder requestBuilder = new Request.Builder()
+                .url(this.authCtx.baseUrl + path);
+        requestBuilder.header("Content-Type", "application/json");
+        requestBuilder.header("Authorization", "Bearer " + this.authCtx.accessToken);
+        requestBuilder.delete(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), data.toString()));
+        JSONObject response = this.authCtx.send(requestBuilder);
+        return jsonObjectToMap(response);
+    }
 
     private void validateDestination(String name, String destination, String type) {
         if (name.length() < 1 || name.length() > 32) {
