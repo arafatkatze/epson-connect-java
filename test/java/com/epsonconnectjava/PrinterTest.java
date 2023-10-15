@@ -35,8 +35,8 @@ public class PrinterTest {
     @Test
     public void testScanner() throws Exception {
         printer = new Printer(authRealCtx);
-
-        printer.info();
+        String filePath = "blank.pdf";
+        printer.print(filePath );
 
     }
 }

@@ -39,3 +39,6 @@ gradle-wrapper.jar
 
 # Miscellaneous files
 .DS_Store
+
+# test pdf files
+*.pdf
