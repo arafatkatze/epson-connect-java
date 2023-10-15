@@ -1,6 +1,6 @@
 package epsonconnectjava;
 
-import com.epsonconnectjava.Scanner;
+import com.epsonconnectjava.Printer;
 import com.epsonconnectjava.AuthCtx;
 import com.epsonconnectjava.http.HttpClient;
 import com.epsonconnectjava.http.RealHttpClient;
@@ -15,13 +15,13 @@ import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-public class ScannerTest {
+public class PrinterTest {
 
     @Mock
     private HttpClient mockHttpClient;
 
     private AuthCtx authCtx, authRealCtx;
-    private Scanner scanner;
+    private Printer printer;
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -34,9 +34,9 @@ public class ScannerTest {
 
     @Test
     public void testScanner() throws Exception {
-        scanner = new Scanner(authRealCtx);
+        printer = new Printer(authRealCtx);
 
-        scanner.list();
+        printer.info();
 
     }
 }
