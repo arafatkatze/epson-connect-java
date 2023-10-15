@@ -21,14 +21,14 @@ public class RealHttpClient implements HttpClient {
 
     private OkHttpClient client;
 
-    public RealHttpClient(String baseUrl) {
+    public RealHttpClient(String baseUrl , String printerEmail, String clientId, String clientSecret) {
         this.baseUrl = baseUrl;
-        this.clientId = "a243e42e187e469f8e9c6e2383b7e2e6";
-        this.clientSecret = "PDLDVwcHI7eX4oL2jHGEdIgl0EK9iMdjNkXumi2tZIgaeyG5AKtGqgHQCEyNZGsR";
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
 
         this.expiresAt = LocalDateTime.now();
         this.client = new OkHttpClient();
-        this.printerEmail = "pdx3882hvp0q97@print.epsonconnect.com";
+        this.printerEmail =  printerEmail;
     }
 
     @Override
@@ -37,19 +37,34 @@ public class RealHttpClient implements HttpClient {
             headers = getDefaultHeaders();
         }
         JSONObject responseBody = null;
-        RequestBody formBody;
-        formBody = new FormBody.Builder()
-                .add("grant_type", "password")
-                .add("username", this.printerEmail)
-                .add("password", "")
-                .build();
+        RequestBody formBody = null;
+
+//        if ("POST".equalsIgnoreCase(method)) {
+            formBody = new FormBody.Builder()
+                    .add("grant_type", "password")
+                    .add("username", this.printerEmail)
+                    .add("password", "")
+                    .build();
+//        }
+
         String credentials = Credentials.basic(this.clientId, this.clientSecret);
-        Request request = new Request.Builder()
+        Request.Builder requestBuilder = new Request.Builder()
                 .url(baseUrl + path)
-                .post(formBody)
-                .header("Authorization", credentials)
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .build();
+                .header("Authorization", credentials);
+
+
+        if ("POST".equalsIgnoreCase(method) && formBody != null) {
+            requestBuilder.header("Content-Type", "application/x-www-form-urlencoded");
+            requestBuilder.post(formBody);
+        } else if ("GET".equalsIgnoreCase(method)) {
+            requestBuilder.header("Content-Type", "application/json");
+            requestBuilder.header("Authorization", "Bearer " + headers.get("access_token"));
+            requestBuilder.get();
+        } else {
+            throw new IllegalArgumentException("Unsupported HTTP method: " + method);
+        }
+
+        Request request = requestBuilder.build();
 
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
@@ -77,10 +92,10 @@ public class RealHttpClient implements HttpClient {
 
 
     private Map<String, String> getDefaultHeaders() {
-        Map<String, String> headers = new HashMap<>();
-        headers.put("Authorization", "Bearer ..."); // Modify as needed
-        headers.put("Content-Type", "application/json");
-        return headers;
+        Map<String, String> defaultHeaders = new HashMap<>();
+        defaultHeaders.put("Authorization", "Bearer " + this.accessToken);
+        defaultHeaders.put("Content-Type", "application/json");
+        return defaultHeaders;
     }
 
     public static class ApiError extends RuntimeException {

@@ -1,9 +1,13 @@
 package com.epsonconnectjava;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 import java.util.Date;
+
+import okhttp3.*;
 import org.json.JSONObject;
 import com.epsonconnectjava.http.HttpClient;
 import java.io.OutputStream;
@@ -12,6 +16,8 @@ import java.net.URL;
 import org.json.JSONObject;
 import java.util.Scanner;
 
+import com.epsonconnectjava.http.HttpClient;
+import com.epsonconnectjava.http.RealHttpClient;
 public class AuthCtx {
     private static final Logger logger = Logger.getLogger(AuthCtx.class.getName());
     
@@ -25,7 +31,11 @@ public class AuthCtx {
     private String subjectId;
     private final HttpClient httpClient;
 
-    
+    // Constructor with default HttpClient (RealHttpClient)
+    public AuthCtx(String baseUrl, String printerEmail, String clientId, String clientSecret) {
+        this(new RealHttpClient( baseUrl, printerEmail, clientId, clientSecret), baseUrl, printerEmail, clientId, clientSecret); // Use 'this' to call the other constructor with RealHttpClient as default
+    }
+
     public AuthCtx(HttpClient httpClient, String baseUrl, String printerEmail, String clientId, String clientSecret) {
         this.baseUrl = baseUrl;
         this.printerEmail = printerEmail;
@@ -39,41 +49,12 @@ public class AuthCtx {
     }
 
     public JSONObject send(String method, String path, Map<String, String> data, Map<String, String> headers) {
-        HttpURLConnection conn = null;
-        try {
-            URL url = new URL(baseUrl + path);
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod(method);
-    
-            if (headers != null) {
-                for (Map.Entry<String, String> header : headers.entrySet()) {
-                    conn.setRequestProperty(header.getKey(), header.getValue());
-                }
-            }
-    
-            if (data != null) {
-                conn.setDoOutput(true);
-                try (OutputStream os = conn.getOutputStream()) {
-                    byte[] input = mapToFormData(data).getBytes("utf-8");
-                    os.write(input, 0, input.length);
-                }
-            }
-    
-            int responseCode = conn.getResponseCode();
-            if (responseCode != HttpURLConnection.HTTP_OK) {
-                throw new ApiError("HTTP error code: " + responseCode);
-            }
-    
-            String responseBody = new Scanner(conn.getInputStream(), "UTF-8").useDelimiter("\\A").next();
-            return new JSONObject(responseBody);
-    
-        } catch (Exception e) {
-            throw new ApiError("Error sending request: " + e.getMessage());
-        } finally {
-            if (conn != null) {
-                conn.disconnect();
-            }
-        }
+        return this.httpClient.send(method,path,data,headers);
+    }
+
+    public JSONObject sendGet(String method, String path, Map<String, String> data, Map<String, String> headers) {
+        headers.put("access_token", this.accessToken);
+        return this.httpClient.send(method,path,data,headers);
     }
 
     private String mapToFormData(Map<String, String> data) {

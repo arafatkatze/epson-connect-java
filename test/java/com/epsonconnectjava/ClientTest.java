@@ -1,4 +1,4 @@
-package com.epsonconnectjava;
+package epsonconnectjava;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,6 +8,7 @@ import org.mockito.MockedStatic;
 import org.junit.jupiter.api.BeforeEach;
 import java.util.HashMap;
 import java.util.Map;
+import com.epsonconnectjava.Client;
 
 
 

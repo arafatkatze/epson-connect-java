@@ -1,7 +1,9 @@
 
-package com.epsonconnectjava;
+package epsonconnectjava;
+
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import com.epsonconnectjava.Fibonacci;
 import org.junit.jupiter.api.Test;
 
 public class FibonacciTest {

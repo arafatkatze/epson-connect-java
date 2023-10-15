@@ -36,7 +36,7 @@ public class Scanner {
       headers.put("Content-Type", "application/json");
       
       // The third parameter (data) is set to null as we are not sending any data in a GET request
-      JSONObject response = authCtx.send(method, path, null, headers);
+      JSONObject response = this.authCtx.sendGet(method, path, null, headers);
       return jsonObjectToMap(response);
   }
   

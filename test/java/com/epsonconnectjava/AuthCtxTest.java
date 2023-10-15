@@ -44,9 +44,8 @@ public class AuthCtxTest {
 
         // Verify that the HttpClient's send method was called once
         verify(mockHttpClient, times(1)).send(anyString(), anyString(), anyMap(), anyMap());
-        HttpClient realHttpClient = new RealHttpClient("https://api.epsonconnect.com");
 
-        authRealCtx = new AuthCtx(realHttpClient, "https://api.epsonconnect.com", "pdx3882hvp0q97@print.epsonconnect.com", "a243e42e187e469f8e9c6e2383b7e2e6", "PDLDVwcHI7eX4oL2jHGEdIgl0EK9iMdjNkXumi2tZIgaeyG5AKtGqgHQCEyNZGsR");
+        authRealCtx = new AuthCtx( "https://api.epsonconnect.com",  "pdx3882hvp0q97@print.epsonconnect.com", "a243e42e187e469f8e9c6e2383b7e2e6", "PDLDVwcHI7eX4oL2jHGEdIgl0EK9iMdjNkXumi2tZIgaeyG5AKtGqgHQCEyNZGsR");
         authRealCtx.auth();
     }
 
