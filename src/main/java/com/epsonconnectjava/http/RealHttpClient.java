@@ -37,24 +37,19 @@ public class RealHttpClient implements HttpClient {
             headers = getDefaultHeaders();
         }
         JSONObject responseBody = null;
-        RequestBody formBody = null;
 
-//        if ("POST".equalsIgnoreCase(method)) {
-            formBody = new FormBody.Builder()
+        Request.Builder requestBuilder = new Request.Builder()
+                .url(baseUrl + path);
+
+        if ("POST".equalsIgnoreCase(method)) {
+            RequestBody formBody = new FormBody.Builder()
                     .add("grant_type", "password")
                     .add("username", this.printerEmail)
                     .add("password", "")
                     .build();
-//        }
-
-        String credentials = Credentials.basic(this.clientId, this.clientSecret);
-        Request.Builder requestBuilder = new Request.Builder()
-                .url(baseUrl + path)
-                .header("Authorization", credentials);
-
-
-        if ("POST".equalsIgnoreCase(method) && formBody != null) {
+            String credentials = Credentials.basic(this.clientId, this.clientSecret);
             requestBuilder.header("Content-Type", "application/x-www-form-urlencoded");
+            requestBuilder.header("Authorization", credentials);
             requestBuilder.post(formBody);
         } else if ("GET".equalsIgnoreCase(method)) {
             requestBuilder.header("Content-Type", "application/json");

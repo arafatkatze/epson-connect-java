@@ -16,6 +16,7 @@ import java.net.URL;
 import org.json.JSONObject;
 import java.util.Scanner;
 
+import okhttp3.*;
 import com.epsonconnectjava.http.HttpClient;
 import com.epsonconnectjava.http.RealHttpClient;
 public class AuthCtx {
@@ -33,7 +34,7 @@ public class AuthCtx {
 
     // Constructor with default HttpClient (RealHttpClient)
     public AuthCtx(String baseUrl, String printerEmail, String clientId, String clientSecret) {
-        this(new RealHttpClient( baseUrl, printerEmail, clientId, clientSecret), baseUrl, printerEmail, clientId, clientSecret); // Use 'this' to call the other constructor with RealHttpClient as default
+        this(new RealHttpClient(baseUrl, printerEmail, clientId, clientSecret), baseUrl, printerEmail, clientId, clientSecret); // Use 'this' to call the other constructor with RealHttpClient as default
     }
 
     public AuthCtx(HttpClient httpClient, String baseUrl, String printerEmail, String clientId, String clientSecret) {
@@ -72,7 +73,7 @@ public class AuthCtx {
         String method = "POST";
         String path = "/api/1/printing/oauth2/auth/token?subject=printer";
 
-        if (expiresAt.compareTo(new Date()) > 0) {
+        if (this.expiresAt.compareTo(new Date()) > 0) {
             return;
         }
 
@@ -80,13 +81,13 @@ public class AuthCtx {
         headers.put("Content-Type", "application/x-www-form-urlencoded");
         
         Map<String, String> data = new HashMap<>();
-        if (accessToken.isEmpty()) {
+        if (this.accessToken.isEmpty()) {
             data.put("grant_type", "password");
-            data.put("username", printerEmail);
+            data.put("username", this.printerEmail);
             data.put("password", "");
         } else {
             data.put("grant_type", "refresh_token");
-            data.put("refresh_token", refreshToken);
+            data.put("refresh_token", this.refreshToken);
         }
 
         try {
@@ -98,14 +99,14 @@ public class AuthCtx {
                 throw new AuthenticationError(error);
             }
 
-            if (accessToken.isEmpty()) {
-                refreshToken = body.getString("refresh_token");
+            if (this.accessToken.isEmpty()) {
+                this.refreshToken = body.getString("refresh_token");
             }
 
             long expiresIn = body.getLong("expires_in");
-            expiresAt = new Date(System.currentTimeMillis() + expiresIn * 1000);
-            accessToken = body.getString("access_token");
-            subjectId = body.getString("subject_id");
+            this.expiresAt = new Date(System.currentTimeMillis() + expiresIn * 1000);
+            this.accessToken = body.getString("access_token");
+            this.subjectId = body.getString("subject_id");
         } catch (ApiError e) {
             throw new AuthenticationError(e.getMessage());
         }

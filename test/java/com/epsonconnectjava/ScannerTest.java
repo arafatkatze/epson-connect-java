@@ -35,6 +35,7 @@ public class ScannerTest {
     @Test
     public void testScanner() throws Exception {
         scanner = new Scanner(authRealCtx);
+        
         scanner.list();
 
     }
