@@ -1,7 +1,10 @@
 package com.epsonconnectjava.http;
+
 import okhttp3.Request;
-import org.json.JSONObject;  // Assuming you're using the org.json library
-import java.util.Map;
+import org.json.JSONObject;
+
+import java.io.IOException;
+
 public interface HttpClient {
-    JSONObject send(Request.Builder requestBuilder);
+    JSONObject send(Request.Builder requestBuilder) throws IOException;
 }

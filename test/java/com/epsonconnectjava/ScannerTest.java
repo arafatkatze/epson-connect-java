@@ -1,18 +1,19 @@
 package epsonconnectjava;
 
-import com.epsonconnectjava.Scanner;
 import com.epsonconnectjava.AuthCtx;
+import com.epsonconnectjava.Scanner;
 import com.epsonconnectjava.http.HttpClient;
-import com.epsonconnectjava.http.RealHttpClient;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import com.epsonconnectjava.Scanner;
 
-import static org.mockito.ArgumentMatchers.anyMap;
-import static org.mockito.ArgumentMatchers.anyString;
+import java.io.IOException;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 public class ScannerTest {
@@ -20,23 +21,35 @@ public class ScannerTest {
     @Mock
     private HttpClient mockHttpClient;
 
-    private AuthCtx authCtx, authRealCtx;
+    private AuthCtx mockAuthCtx;
     private Scanner scanner;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
 
-
-        authRealCtx = new AuthCtx( "https://api.epsonconnect.com",  "pdx3882hvp0q97@print.epsonconnect.com", "a243e42e187e469f8e9c6e2383b7e2e6", "PDLDVwcHI7eX4oL2jHGEdIgl0EK9iMdjNkXumi2tZIgaeyG5AKtGqgHQCEyNZGsR");
-//        authRealCtx.auth();
-        //   scanner = new Scanner(authCtx);
+        mockAuthCtx = Mockito.mock(AuthCtx.class);
+        mockAuthCtx.baseUrl = ("http://mockedbaseurl.com");
+        mockAuthCtx.accessToken = ("mockedAccessToken");
+        scanner = new Scanner(mockAuthCtx);
     }
 
     @Test
-    public void testScanner() throws Exception {
-        scanner = new Scanner(authRealCtx);
+    public void testList() throws IOException {
+        // Arrange
+        JSONObject mockedResponse = new JSONObject();
+        mockedResponse.put("id", "mockedId");
+        mockedResponse.put("alias_name", "mockedName");
+        mockedResponse.put("type", "mockedType");
+        mockedResponse.put("destination", "mockedDestination");
 
-        scanner.list();
+        when(mockAuthCtx.send(any())).thenReturn(mockedResponse);
 
+        // Act
+        Map<String, String> result = scanner.list();
+
+        // Assert
+        assertEquals("mockedId", result.get("id"));
+        verify(mockAuthCtx, times(1)).send(any());
     }
 }

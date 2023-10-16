@@ -1,72 +1,129 @@
 package com.epsonconnectjava;
 
-import com.epsonconnectjava.AuthCtx;
+import okhttp3.MediaType;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashMap;
-import java.util.Map;
-import okhttp3.*;
-import org.json.JSONObject;
-import java.nio.file.*;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.Map;
-import java.nio.file.*;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
-import java.io.IOException;
-import okhttp3.*;
-import java.io.File;
 
+/**
+ * Represents a Printer that interacts with an external API to perform various printer operations.
+ */
 public class Printer {
     // Define valid destination types for the scanner
     private static final Set<String> VALID_DESTINATION_TYPES;
+    private static final Set<String> VALID_EXTENSIONS;
+    private static final Set<String> VALID_OPERATORS;
+
     static {
         VALID_DESTINATION_TYPES = new HashSet<>();
         VALID_DESTINATION_TYPES.add("mail");
         VALID_DESTINATION_TYPES.add("url");
     }
 
+    static {
+        VALID_EXTENSIONS = new HashSet<>();
+        VALID_EXTENSIONS.add("doc");
+        VALID_EXTENSIONS.add("docx");
+        VALID_EXTENSIONS.add("xls");
+        VALID_EXTENSIONS.add("xlsx");
+        VALID_EXTENSIONS.add("ppt");
+        VALID_EXTENSIONS.add("pptx");
+        VALID_EXTENSIONS.add("pdf");
+        VALID_EXTENSIONS.add("jpeg");
+        VALID_EXTENSIONS.add("jpg");
+        VALID_EXTENSIONS.add("bmp");
+        VALID_EXTENSIONS.add("gif");
+        VALID_EXTENSIONS.add("png");
+        VALID_EXTENSIONS.add("tiff");
+
+        VALID_OPERATORS = new HashSet<>();
+        VALID_OPERATORS.add("user");
+        VALID_OPERATORS.add("operator");
+    }
+
     private AuthCtx authCtx;
-    private String path;
-    private Map<String, Map<String, String>> destinationCache = new HashMap<>();
+
+    /**
+     * Constructor for the Printer class.
+     *
+     * @param authCtx The authentication context containing necessary credentials and tokens.
+     */
     public Printer(AuthCtx authCtx) {
         this.authCtx = authCtx;
         this.authCtx.auth();
-        this.path = "/api/1/printing/printers/" + authCtx.getDeviceId() + "/destinations";
     }
-    public Map<String, String> info() {
-        String method = "GET";
-        Map<String, String> headers = new HashMap<>();
-        headers.put("Content-Type", "application/json");
-        path = "/api/1/printing/printers/" + authCtx.getDeviceId();
 
+    /**
+     * Retrieves information about the printer.
+     *
+     * @return A map containing details about the printer.
+     * @throws IOException If an error occurs during the API request.
+     */
+    public Map<String, String> info() throws IOException {
+        String path = "/api/1/printing/printers/" + authCtx.getDeviceId();
         Request.Builder requestBuilder = new Request.Builder()
                 .url(this.authCtx.baseUrl + path);
+
         requestBuilder.header("Content-Type", "application/json");
         requestBuilder.header("Authorization", "Bearer " + this.authCtx.accessToken);
         requestBuilder.get();
+
         JSONObject response = this.authCtx.send(requestBuilder);
         return jsonObjectToMap(response);
     }
 
-    public JSONObject printSetting()  {
+    /**
+     * Retrieves the device ID.
+     *
+     * @return A string representing the device ID.
+     */
+    public String deviceId() {
+        return authCtx.getDeviceId();
+    }
+
+    /**
+     * Retrieves information about a particular job.
+     *
+     * @param jobId The ID of the print job to be executed.
+     * @return A map containing details about the job.
+     * @throws IOException If an error occurs during the API request.
+     */
+    public Map<String, String> jobInfo(String jobId) throws IOException {
+        String path = "/api/1/printing/printers/" + authCtx.getDeviceId() + "/jobs/" + jobId;
+        Request.Builder requestBuilder = new Request.Builder()
+                .url(this.authCtx.baseUrl + path);
+
+        requestBuilder.header("Content-Type", "application/json");
+        requestBuilder.header("Authorization", "Bearer " + this.authCtx.accessToken);
+        requestBuilder.get();
+
+        JSONObject response = this.authCtx.send(requestBuilder);
+        return jsonObjectToMap(response);
+    }
+
+    /**
+     * Retrieves the print settings.
+     *
+     * @return A JSONObject containing the print settings.
+     * @throws IOException If an error occurs during the API request.
+     */
+    public JSONObject printSetting() throws IOException {
         String method = "POST";
         String path = "/api/1/printing/printers/" + this.authCtx.getDeviceId() + "/jobs";
-
-//        validateSettings(settings); // Assuming you have this method in Java
-
-        // Convert the settings map to a JSON string for request body
-        Map<String, String> settings = new HashMap<>();
-        settings.put("job_name", "job-ewqrEw");
-        settings.put("print_mode", "document");
+        Map<String, Object> settings = PrintSetting.mergeWithDefaultSettings(null);
+        PrintSetting.validateSettings(settings);
         String jsonBody = new JSONObject(settings).toString();
-
         Request.Builder requestBuilder = new Request.Builder()
                 .url(this.authCtx.baseUrl + path)
                 .header("Content-Type", "application/json")
@@ -76,6 +133,12 @@ public class Printer {
         return this.authCtx.send(requestBuilder);
     }
 
+    /**
+     * Executes a print job using the specified job ID.
+     *
+     * @param jobId The ID of the print job to be executed.
+     * @throws IOException If an error occurs during the API request.
+     */
     public void executePrint(String jobId) throws IOException {
         String method = "POST";
         String path = "/api/1/printing/printers/" + this.authCtx.getDeviceId() + "/jobs/" + jobId + "/print";
@@ -88,46 +151,63 @@ public class Printer {
         this.authCtx.send(requestBuilder);
     }
 
+    /**
+     * Initiates a print operation for the specified file path.
+     *
+     * @param filePath The path to the file to be printed.
+     * @return The job ID of the initiated print operation.
+     * @throws IOException        If an error occurs during the API request.
+     * @throws URISyntaxException If there's an error in URI parsing or construction.
+     */
     public String print(String filePath) throws IOException, URISyntaxException {
         // Create a print job
         JSONObject jobData = printSetting();
-
         // Upload file for printing
         uploadFile(jobData.getString("upload_uri"), Paths.get(filePath), "document");
-
         executePrint(jobData.getString("id"));
-
         // Return the Job ID
         return jobData.getString("id");
     }
 
+    /**
+     * Retrieves the file extension from the given file name.
+     *
+     * @param fileName The name of the file.
+     * @return The file extension or an empty string if no extension is found.
+     */
     private String getFileExtension(String fileName) {
         int dotIndex = fileName.lastIndexOf('.');
         if (dotIndex == -1) return ""; // No extension
         return fileName.substring(dotIndex + 1);
     }
 
+    /**
+     * Uploads a file to a specified URI for printing.
+     *
+     * @param uploadUri The URI to which the file should be uploaded.
+     * @param filePath  The path to the file to be uploaded.
+     * @param printMode The mode in which the file should be printed.
+     * @throws IOException        If an error occurs during the API request.
+     * @throws URISyntaxException If there's an error in URI parsing or construction.
+     */
     public void uploadFile(String uploadUri, Path filePath, String printMode) throws IOException, URISyntaxException {
         // 1. Extract and validate file extension
         String extension = getFileExtension(filePath.toString()).toLowerCase();
-//        if (!VALID_EXTENSIONS.contains(extension)) {
-//            throw new IllegalArgumentException(extension + " is not a valid printing extension.");
-//        }
+        if (!VALID_EXTENSIONS.contains(extension)) {
+            throw new IllegalArgumentException(extension + " is not a valid printing extension.");
+        }
 
         // Get extension from file path
         URI uri = new URI(uploadUri);
-        String newQuery =  uri.getQuery() + "&File=1." + extension;
-        URI newUri = new URI(uri.getScheme(), this.authCtx.baseUrl, uri.getPath(), newQuery, uri.getFragment());
-        String pathd = newUri.toString();
-        String path = "https://api.epsonconnect.com/c33fe124ef80c3b13670be27a6b0bcd7/v1/storage/PostData?" + newQuery;
-
-
+        URI BaseUri = new URI(this.authCtx.baseUrl);
+        String newQuery = uri.getQuery() + "&File=1." + extension;
+        URI newUri = new URI(uri.getScheme(), BaseUri.getAuthority(), uri.getPath(), newQuery, uri.getFragment());
+        String path = newUri.toString();
         // 3. Determine content type
         String contentType = "application/octet-stream";
         if ("photo".equalsIgnoreCase(printMode)) {
             contentType = "image/jpeg";
         }
-
 
         // 4. Read file data
         File file = new File(String.valueOf(filePath));
@@ -146,6 +226,12 @@ public class Printer {
         this.authCtx.send(requestBuilder);
     }
 
+    /**
+     * Converts a JSONObject into a Map.
+     *
+     * @param jsonObject The JSONObject to be converted.
+     * @return A map representation of the given JSONObject.
+     */
     private Map<String, String> jsonObjectToMap(JSONObject jsonObject) {
         Map<String, String> map = new HashMap<>();
         for (String key : jsonObject.keySet()) {
