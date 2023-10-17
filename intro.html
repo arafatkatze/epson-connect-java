@@ -1,0 +1,54 @@
+<html><head><style>body {
+   color: black;
+}
+</style></head><body><h1 id="epson-connect-java-sdk">Epson Connect Java SDK</h1>
+<p>The Epson Connect Java SDK provides a comprehensive interface to the Epson Connect API. With this SDK, Java developers can seamlessly control Epson printers and scanners through the Epson cloud service.</p>
+<h2 id="getting-started">Getting Started</h2>
+<h3 id="installation">Installation</h3>
+<p>To include the SDK in your Gradle project, add the following in your <code>build.gradle</code>:</p>
+<pre><code><span class="hljs-section">repositories</span> {
+    <span class="hljs-section">maven</span> { <span class="hljs-attribute">url</span> <span class="hljs-string">'https://jitpack.io'</span> }
+}
+dependencies {
+    <span class="hljs-attribute">implementation</span> <span class="hljs-string">'com.github.arafatkatze:epson-connect-java:v1.0.1'</span>
+}
+</code></pre><h2 id="prerequisites">Prerequisites</h2>
+<p>Make sure you have the required credentials:</p>
+<ul>
+<li>Printer Email</li>
+<li>Client ID</li>
+<li>Client Secret</li>
+</ul>
+<p>These can be obtained from the Epson Connect API registration portal.</p>
+<h2 id="usage">Usage</h2>
+<p>You can initialize the client using direct parameters:</p>
+<pre><code><span class="hljs-keyword">import</span> com.epsonconnectjava.<span class="hljs-built_in">Client</span>;
+<span class="hljs-keyword">import</span> com.epsonconnectjava.Scanner;
+
+<span class="hljs-keyword">import</span> java.io.IOException;
+
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> EpsonPrinter {
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> main(<span class="hljs-keyword">String</span>[] args) throws IOException {
+    <span class="hljs-built_in">Client</span> client = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Client</span>(<span class="hljs-string">"printer_email"</span>, <span class="hljs-string">"client_id"</span>, <span class="hljs-string">"client_secret"</span>);
+    Scanner scanme = client.getScanner();
+    Printer printer = client.getPrinter();
+    System.out.<span class="hljs-built_in">println</span>(scanme.list());
+    System.out.<span class="hljs-built_in">println</span>(printer.deviceId());
+  }
+}
+</code></pre><h2 id="printing">Printing</h2>
+<pre><code>Printer printFile = client.getPrinter()<span class="hljs-comment">;</span>
+printFile.print(<span class="hljs-string">"file_path.pdf"</span>)<span class="hljs-comment">;</span>
+</code></pre><h2 id="scanning">Scanning</h2>
+<pre><code><span class="hljs-keyword">Scanner </span><span class="hljs-keyword">scanme </span>= client.getScanner()<span class="hljs-comment">;</span>
+System.out.println(<span class="hljs-keyword">scanme.list());</span>
+</code></pre><h2 id="testing-the-library">Testing the library</h2>
+<pre><code>git clone git@github<span class="hljs-selector-class">.com</span>:arafatkatze/epson-connect-java<span class="hljs-selector-class">.git</span>
+./gradelw build
+./gradlew test
+</code></pre><h2 id="local-build">Local Build</h2>
+<pre><code>git clone git@github<span class="hljs-selector-class">.com</span>:arafatkatze/epson-connect-java<span class="hljs-selector-class">.git</span>
+./gradlew build
+</code></pre><p>To publish to JitPack:
+Ensure you have the required configurations set up in your build.gradle and then create a new release on your GitHub repository. JitPack will automatically detect and build your library.</p>
+</body></html>

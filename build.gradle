@@ -42,5 +42,11 @@ javadoc {
     source = sourceSets.main.allJava
     classpath = sourceSets.main.compileClasspath
     options.links("https://docs.oracle.com/javase/8/docs/api/");
-    // Add other link and linkOffline options as required
+    options.overview = "intro.html";
 }
+
+task copyJavadoc(type: Copy, dependsOn: javadoc) {
+    from javadoc.destinationDir
+    into "docs"
+}
+
