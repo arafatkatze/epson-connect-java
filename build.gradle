@@ -1,9 +1,18 @@
 plugins {
     id 'java'
 }
+apply plugin: 'maven-publish'
 
 repositories {
     mavenCentral()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
 }
 
 dependencies {

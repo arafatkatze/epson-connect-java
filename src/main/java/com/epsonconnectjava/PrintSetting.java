@@ -146,7 +146,7 @@ public class PrintSetting {
     public static void validateSettings(Map<String, Object> settings) {
         // Start with the basic checks
         Set<String> extraKeys = new HashSet<>(settings.keySet());
-        extraKeys.removeAll(Set.of("job_name", "print_mode", "print_setting"));
+        extraKeys.removeAll(Arrays.asList("job_name", "print_mode", "print_setting"));
         if (!extraKeys.isEmpty()) {
             throw new IllegalArgumentException("Invalid settings keys " + extraKeys);
         }
