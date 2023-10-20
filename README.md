@@ -48,6 +48,22 @@ public class EpsonPrinter {
 Printer printFile = client.getPrinter();
 printFile.print("file_path.pdf");
 ``` 
+For printing the following file extensions are supported 
+```
+doc
+docx
+xls
+xlsx
+ppt
+pptx
+pdf
+jpeg
+jpg
+bmp
+gif
+png
+tiff
+```
 
 ## Scanning 
 ```

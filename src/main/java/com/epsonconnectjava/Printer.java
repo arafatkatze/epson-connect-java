@@ -218,7 +218,7 @@ public class Printer {
         // 6. Send the file for upload using POST request
         Request.Builder requestBuilder = new Request.Builder()
                 .url(path)
-                .header("Content-Length", "4911")
+                .header("Content-Length", String.valueOf(file.length()))
                 .header("Content-Type", "application/octet-stream")
                 .header("Authorization", "Bearer " + this.authCtx.accessToken)
                 .post(requestBody);

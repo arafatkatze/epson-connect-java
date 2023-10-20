@@ -24,7 +24,7 @@ public class PrinterTest {
     private AuthCtx authCtx, authRealCtx;
     private Printer printer;
     @Mock
-    private AuthCtx mockAuthCtx;
+    private AuthCtx mockAuthCtx, authctx;
 
     @BeforeEach
     public void setUp() {
@@ -35,20 +35,20 @@ public class PrinterTest {
     }
 
     @Test
-    public void testJobInfo() throws IOException {
-        String expectedJobId = "testJobId";
-        String expectedUrl = "https://baseUrl/api/1/printing/printers/testDeviceId/jobs/" + expectedJobId;
-        JSONObject mockResponse = new JSONObject();
-        mockResponse.put("jobId", expectedJobId);
-        mockResponse.put("status", "completed");
+    public void testJobInfo() throws IOException, URISyntaxException {
+       String expectedJobId = "testJobId";
+       String expectedUrl = "https://baseUrl/api/1/printing/printers/testDeviceId/jobs/" + expectedJobId;
+       JSONObject mockResponse = new JSONObject();
+       mockResponse.put("jobId", expectedJobId);
+       mockResponse.put("status", "completed");
 
-        when(mockAuthCtx.getDeviceId()).thenReturn("testDeviceId");
-        when(mockAuthCtx.send(any())).thenReturn(mockResponse);
+       when(mockAuthCtx.getDeviceId()).thenReturn("testDeviceId");
+       when(mockAuthCtx.send(any())).thenReturn(mockResponse);
 
-        Map<String, String> result = printer.jobInfo(expectedJobId);
+       Map<String, String> result = printer.jobInfo(expectedJobId);
 
-        assertEquals(expectedJobId, result.get("jobId"));
-        assertEquals("completed", result.get("status"));
+       assertEquals(expectedJobId, result.get("jobId"));
+       assertEquals("completed", result.get("status"));
     }
 
     @Test
